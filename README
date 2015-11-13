@@ -1,0 +1,53 @@
+native-java-agent
+=================
+v0.01 by Steve Capper <steve.capper@linaro.org>
+
+native-java-agent is a library and a Python script that allow Linux
+perf to view information about JIT'ed Java code.
+
+This software acts as a Java Virtual Machine Tools Interface (JVMTI)
+Agent. It is loosely based on perf-map-agent by Johannes Rudolph:
+https://github.com/jrudolph/perf-map-agent
+
+Rather than sample all the function addresses at an instant in time,
+native-java-agent runs throughout the entire workload and captures the
+following as the JVM generates JIT'ed functions:
+ 1) Address offsets and names,
+ 2) Source code filenames, linenumber and bytecode offsets.
+
+Building
+--------
+  cmake .
+  make
+
+
+Recording in Perf
+-----------------
+
+One can invoke perf via:
+
+$ perf record -g java \
+    -agentpath:/full/path/to/libnativejava.so \
+    -jar workload.jar
+
+For JDK9 workloads, I would recommend the following flag be enabled too:
+  -XX:+PreserveFramePointer
+as this will give reliable call stack information.
+
+
+Viewing JIT'ed code in Perf
+---------------------------
+
+One can view JIT'ed code by overriding the default objdump command
+thusly:
+
+$ perf report --objdump=./java-objdump.py
+
+The JAVA_SOURCE_PATH environment variable contains the base paths for
+Java source that java-objdump.py will scan.
+
+Todo
+----
+ * Add attach/detach to already running JVM.
+ * Clean up the Python code a lot!
+ * Test on architectures other than AArch64.
